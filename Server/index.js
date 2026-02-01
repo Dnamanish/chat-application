@@ -3,6 +3,8 @@ const app = express();
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
+require("dotenv").config()
+const supabase=require("./supabaseClient")
 
 
 app.use(cors());
@@ -37,3 +39,5 @@ io.on("connection", (socket) => {
 server.listen(3001, () => {
   console.log("server is running");
 });
+
+
