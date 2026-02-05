@@ -1,21 +1,29 @@
-import { useState } from 'react'
-import io from 'socket.io-client' 
-import './App.css'
-import Chats from './Components/Chats'
+import { useState, useEffect } from "react";
+import io from "socket.io-client";
+import "./App.css";
+import Chats from "./Components/Chats";
+import { supabase } from "./supabaseClient";
 
-const socket = io.connect("http://localhost:3001")
+const socket = io.connect("http://localhost:3001");
 
 function App() {
-  const [username, setUsername] = useState("")
-  const [roomId, setRoomId] = useState("")
-  const [showChat, setShowChat] = useState(false)
+  const [username, setUsername] = useState("");
+  const [roomId, setRoomId] = useState("");
+  const [showChat, setShowChat] = useState(false);
+
+  useEffect(() => {
+    const signup = async () => {
+      await supabase.auth.signInAnonymously();
+    };
+    signup();
+  },[]);
 
   const joinRoom = () => {
     if (username !== "" && roomId !== "") {
-      socket.emit("join_room", roomId)
-      setShowChat(true)
+      socket.emit("join_room", roomId);
+      setShowChat(true);
     }
-  }
+  };
 
   return (
     <div className="pp">
@@ -41,7 +49,7 @@ function App() {
         <Chats socket={socket} username={username} roomId={roomId} />
       )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
