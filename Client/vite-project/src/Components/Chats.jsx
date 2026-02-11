@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../supabaseClient";
+import {getAnonUserId} from '../utils/anonUser'
+
+
 
 const Chats = ({ socket, username, roomId }) => {
   const [currentMessage, setcurrentMessage] = useState("");
   const [messageList, setmessageList] = useState([]);
-  const [userId, setUserId] = useState(null);
   const bottomRef = useRef(null);
+
+  const userId=getAnonUserId();
 
   const sendMessage = async () => {
     if (currentMessage !== "") {
@@ -90,7 +94,7 @@ const Chats = ({ socket, username, roomId }) => {
         </div>
       </div>
 
-      <div className="chat-footer">
+      <div className="chat-footer"> 
         <input
           type="text"
           value={currentMessage}
