@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "../supabaseClient";
-import {getAnonUserId} from '../utils/anonUser'
-
-
+import { getAnonUserId } from "../utils/anonUser";
 
 const Chats = ({ socket, username, roomId }) => {
   const [currentMessage, setcurrentMessage] = useState("");
   const [messageList, setmessageList] = useState([]);
   const bottomRef = useRef(null);
 
-  const userId=getAnonUserId();
+  const userId = getAnonUserId();
 
   const sendMessage = async () => {
     if (currentMessage !== "") {
@@ -34,14 +32,38 @@ const Chats = ({ socket, username, roomId }) => {
   };
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data && data.user) {
-        setUserId(data.user.id);
+    if (!roomId) return;
+
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("room_id", roomId)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.log("Error loading messages :", error);
+        return;
       }
+
+      const formatted = data.map((msg) => ({
+        id: msg.id,
+        room: msg.room_id,
+        author: msg.user_id,
+        message: msg.text,
+        time:
+          new Date(msg.created_at).getHours() +
+          ":" +
+          new Date(msg.created_at).getMinutes(),
+        user_id: msg.user_id,
+      }));
+
+      setmessageList(formatted);
     };
-    getUser();
-  }, []);
+
+    loadMessages();
+  },[roomId]);
 
   useEffect(() => {
     const handler = (data) => {
@@ -94,7 +116,7 @@ const Chats = ({ socket, username, roomId }) => {
         </div>
       </div>
 
-      <div className="chat-footer"> 
+      <div className="chat-footer">
         <input
           type="text"
           value={currentMessage}
