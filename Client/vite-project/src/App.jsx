@@ -3,7 +3,7 @@ import io from "socket.io-client";
 import "./App.css";
 import Chats from "./Components/Chats";
 
-const socket = io.connect("http://localhost:5173");
+const socket = io.connect("http://localhost:3001");
 
 function App() {
   const [username, setUsername] = useState("");
@@ -14,7 +14,7 @@ function App() {
   // Fetch available rooms
   useEffect(() => {
     const fetchRooms = async () => {
-      const response = await fetch("http://localhost:5173/rooms");
+      const response = await fetch("http://localhost:3001/rooms");
       const data = await response.json();
       setRooms(data);
     };
@@ -26,7 +26,7 @@ function App() {
   const createRoom = async () => {
     if (!username) return alert("Enter your name first");
 
-    const response = await fetch("http://localhost:5173/create-room", {
+    const response = await fetch("http://localhost:3001/create-room", {
       method: "POST",
     });
 

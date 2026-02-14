@@ -39,13 +39,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("send_message", async (data) => {
-    const { room, user_id, message } = data;
+    const { room, user_id, message,author } = data;
 
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000 * 2).toISOString(); // 1hr*2=2hr
     const { error } = await supabase.from("messages").insert([
       {
         room_id: room, //"2687ecff-6051-42b1-9a78-9701b3c8bae0"
         user_id: user_id,
+        username:author,
         text: message,
         expires_at: expiresAt,
       },

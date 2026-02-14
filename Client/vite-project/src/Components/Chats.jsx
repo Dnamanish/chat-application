@@ -50,7 +50,7 @@ const Chats = ({ socket, username, roomId }) => {
       const formatted = data.map((msg) => ({
         id: msg.id,
         room: msg.room_id,
-        author: msg.user_id,
+        author: msg.username,
         message: msg.text,
         time:
           new Date(msg.created_at).getHours() +
@@ -63,6 +63,7 @@ const Chats = ({ socket, username, roomId }) => {
     };
 
     loadMessages();
+    
   },[roomId]);
 
   useEffect(() => {
@@ -105,8 +106,8 @@ const Chats = ({ socket, username, roomId }) => {
                     <p>{messageContent.message}</p>
                   </div>
                   <div className="message-meta">
-                    <p>{messageContent.author}</p>
-                    <p>{messageContent.time}</p>
+                    <p>{messageContent.author} • {messageContent.time}</p>
+
                   </div>
                 </div>
               </div>
