@@ -6,6 +6,10 @@ const Chats = ({ socket, username, roomId }) => {
   const [currentMessage, setcurrentMessage] = useState("");
   const [messageList, setmessageList] = useState([]);
   const bottomRef = useRef(null);
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [typingUser, setTypingUser] = useState("");
+
+  const typingTimeoutRef = useRef(null);
 
   const userId = getAnonUserId();
 
@@ -63,8 +67,32 @@ const Chats = ({ socket, username, roomId }) => {
     };
 
     loadMessages();
-    
-  },[roomId]);
+  }, [roomId]);
+
+  useEffect(() => {
+    socket.on("show_typing", (data) => {
+      setTypingUser(data.user);
+    });
+
+    socket.on("hide_typing", () => {
+      setTypingUser("");
+    });
+
+    return () => {
+      socket.off("show_typing");
+      socket.off("hide_typing");
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    socket.on("room_count", (count) => {
+      setOnlineCount(count);
+    });
+
+    return () => {
+      socket.off("room_count");
+    };
+  }, [socket]);
 
   useEffect(() => {
     const handler = (data) => {
@@ -76,9 +104,6 @@ const Chats = ({ socket, username, roomId }) => {
     return () => {
       socket.off("received_message", handler);
     };
-    // socket.on("received_message", (data) => {
-    //   setmessageList((list)=>[...list,data])
-    // });
   }, [socket]);
 
   useEffect(() => {
@@ -88,26 +113,35 @@ const Chats = ({ socket, username, roomId }) => {
   return (
     <div className="chat-window">
       <div className="chat-header">
-        <p>Live Chat</p>
+        <p>Live Chat • {onlineCount} online</p>
       </div>
 
       <div className="chat-body">
         <div className="message-container">
+          {typingUser && (
+            <div
+              style={{ fontSize: "12px", marginLeft: "20px", color: "#6b7280" }}
+            >
+              {typingUser} is typing...
+            </div>
+          )}
+
           {messageList.map((messageContent) => {
             // messageContent we'll get this from backend
             return (
               <div
                 className="message"
                 key={messageContent.id}
-                id={username === messageContent.author ? "you" : "other"}
+                id={userId === messageContent.user_id ? "you" : "other"}
               >
                 <div>
                   <div className="message-content">
                     <p>{messageContent.message}</p>
                   </div>
                   <div className="message-meta">
-                    <p>{messageContent.author} • {messageContent.time}</p>
-
+                    <p>
+                      {messageContent.author} • {messageContent.time}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -122,7 +156,20 @@ const Chats = ({ socket, username, roomId }) => {
           type="text"
           value={currentMessage}
           placeholder="Hey..."
-          onChange={(e) => setcurrentMessage(e.target.value)}
+          onChange={(e) => {
+            setcurrentMessage(e.target.value);
+
+            // clear previous timer
+            if (typingTimeoutRef.current) {
+              clearTimeout(typingTimeoutRef.current);
+            }
+
+            socket.emit("typing", roomId);
+
+            typingTimeoutRef.current = setTimeout(() => {
+              socket.emit("stop_typing", roomId);
+            }, 1000); // just 1 sec after stop typing
+          }}
           onKeyDown={(e) => e.key === "Enter" && sendMessage()}
         />
         <button onClick={sendMessage}>&#9658;</button>

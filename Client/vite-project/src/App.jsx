@@ -20,6 +20,8 @@ function App() {
     };
 
     fetchRooms();
+    const interval = setInterval(fetchRooms, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   // Create Room
@@ -33,7 +35,10 @@ function App() {
     const data = await response.json();
 
     setRoomId(data.roomId);
-    socket.emit("join_room", data.roomId);
+    socket.emit("join_room", {
+      roomId: data.roomId,
+      username: username,
+    });
     setShowChat(true);
   };
 
@@ -41,7 +46,6 @@ function App() {
     <div className="pp">
       {!showChat ? (
         <div className="lobby-container">
-
           {/* LEFT SIDE - LIVE ROOMS */}
           <div className="rooms-panel">
             <h3>Live Rooms</h3>
@@ -58,7 +62,10 @@ function App() {
                     }
 
                     setRoomId(room.id);
-                    socket.emit("join_room", room.id);
+                    socket.emit("join_room", {
+                      roomId: room.id,
+                      username: username,
+                    });
                     setShowChat(true);
                   }}
                 >
@@ -84,7 +91,6 @@ function App() {
               Create Room
             </button>
           </div>
-
         </div>
       ) : (
         <Chats socket={socket} username={username} roomId={roomId} />

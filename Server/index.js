@@ -10,6 +10,8 @@ app.use(express.json());
 app.use(cors());
 const server = http.createServer(app);
 
+const roomUsers = {};
+
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -32,21 +34,49 @@ app.post("/create-room", async (req, res) => {
 io.on("connection", (socket) => {
   console.log(`User Connected : ${socket.id}`);
 
-  socket.on("join_room", (data) => {
+  socket.on("join_room", ({ roomId, username }) => {
     // frontend se roomId send krenge and it will be in data variable
-    socket.join(data);
-    console.log(`User with ID : ${socket.id} joined the room : ${data}`);
+
+    socket.join(roomId);
+    socket.username = username;
+    socket.room = roomId;
+
+    // room exist or not shit
+    if (!roomUsers[roomId]) {
+      roomUsers[roomId] = 0;
+    }
+
+    roomUsers[roomId]++;
+
+    console.log(`User joined ${roomId}`);
+    console.log("Room users:", roomUsers);
+    console.log(`User with ID : ${socket.id} joined the room : ${roomId}`);
+
+    io.to(roomId).emit("room_count", roomUsers[roomId]);
+    socket.roomId = roomId;
+  });
+
+  // typing indicator
+  socket.on("typing", (roomId) => {
+    socket.to(roomId).emit("show_typing", {
+      user: socket.username,
+    });
+  });
+
+  // stop typing event
+  socket.on("stop_typing", (roomId) => {
+    socket.to(roomId).emit("hide_typing");
   });
 
   socket.on("send_message", async (data) => {
-    const { room, user_id, message,author } = data;
+    const { room, user_id, message, author } = data;
 
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000 * 2).toISOString(); // 1hr*2=2hr
     const { error } = await supabase.from("messages").insert([
       {
         room_id: room, //"2687ecff-6051-42b1-9a78-9701b3c8bae0"
         user_id: user_id,
-        username:author,
+        username: author,
         text: message,
         expires_at: expiresAt,
       },
@@ -61,10 +91,21 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected", socket.id);
+    const room = socket.room;
+
+    if (room && roomUsers[room]) {
+      roomUsers[room]--;
+
+      if (roomUsers[room] <= 0) {
+        delete roomUsers[room];
+      } else {
+        io.to(room).emit("room_count", roomUsers[room]);
+      }
+    }
+
+    console.log("User disconnected");
   });
 });
-
 
 app.get("/rooms", async (req, res) => {
   const { data, error } = await supabase
@@ -78,7 +119,6 @@ app.get("/rooms", async (req, res) => {
 
   res.json(data);
 });
-
 
 server.listen(3001, () => {
   console.log("server is running");
