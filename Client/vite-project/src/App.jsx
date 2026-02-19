@@ -10,28 +10,52 @@ function App() {
   const [roomId, setRoomId] = useState("");
   const [showChat, setShowChat] = useState(false);
   const [rooms, setRooms] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
 
   // Fetch available rooms
   useEffect(() => {
+    if (!userLocation) return;
+
     const fetchRooms = async () => {
-      const response = await fetch("http://localhost:3001/rooms");
+      const response = await fetch("http://localhost:3001/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userLocation),
+      });
+
       const data = await response.json();
       setRooms(data);
     };
 
     fetchRooms();
-    const interval = setInterval(fetchRooms, 5000);
-    return () => clearInterval(interval);
+  }, [userLocation]);
+
+  // fetch location
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        console.log("Location error:", error);
+      },
+    );
   }, []);
 
   // Create Room
   const createRoom = async () => {
     if (!username) return alert("Enter your name first");
+    if (!userLocation) return alert("Location not ready");
 
     const response = await fetch("http://localhost:3001/create-room", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userLocation),
     });
-
+    
     const data = await response.json();
 
     setRoomId(data.roomId);

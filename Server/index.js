@@ -21,7 +21,15 @@ const io = new Server(server, {
 
 //<----> room id generation
 app.post("/create-room", async (req, res) => {
-  const { data, error } = await supabase.from("rooms").insert([{}]).select();
+  const { latitude, longitude } = req.body;
+  if (!latitude || !longitude) {
+    return res.status(400).json({ error: "Location required" });
+  }
+
+  const { data, error } = await supabase
+    .from("rooms")
+    .insert([{ latitude, longitude }])
+    .select();
 
   if (error) {
     console.log("Error creating room:", error);
@@ -107,7 +115,7 @@ io.on("connection", (socket) => {
   });
 });
 
-app.get("/rooms", async (req, res) => {
+app.post("/rooms", async (req, res) => {
   const { data, error } = await supabase
     .from("rooms")
     .select("*")
