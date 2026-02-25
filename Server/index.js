@@ -19,6 +19,24 @@ const io = new Server(server, {
   },
 });
 
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth radius in KM
+
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
 //<----> room id generation
 app.post("/create-room", async (req, res) => {
   const { latitude, longitude } = req.body;
@@ -115,17 +133,36 @@ io.on("connection", (socket) => {
   });
 });
 
+
 app.post("/rooms", async (req, res) => {
+  const { latitude, longitude } = req.body;
+
+  if (!latitude || !longitude) {
+    return res.status(400).json({ error: "Location required" });
+  }
+
   const { data, error } = await supabase
     .from("rooms")
-    .select("*")
-    .order("created_at", { ascending: false });
+    .select("*");
 
   if (error) {
     return res.status(500).json({ error });
   }
 
-  res.json(data);
+  const nearbyRooms = data.filter((room) => {
+    if (!room.latitude || !room.longitude) return false;
+
+    const distance = getDistance(
+      latitude,
+      longitude,
+      room.latitude,
+      room.longitude
+    );
+
+    return distance <= 5; // 5 KM radius
+  });
+
+  res.json(nearbyRooms);
 });
 
 server.listen(3001, () => {
