@@ -6,6 +6,9 @@ const { Server } = require("socket.io");
 require("dotenv").config();
 const supabase = require("./supabaseClient");
 
+const PORT = process.env.PORT || 3001;
+
+
 app.use(express.json());
 app.use(cors());
 const server = http.createServer(app);
@@ -14,7 +17,7 @@ const roomUsers = {};
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -137,7 +140,7 @@ io.on("connection", (socket) => {
 app.post("/rooms", async (req, res) => {
   const { latitude, longitude } = req.body;
 
-  if (!latitude || !longitude) {
+  if (latitude==null || longitude==null) {
     return res.status(400).json({ error: "Location required" });
   }
 
@@ -165,6 +168,6 @@ app.post("/rooms", async (req, res) => {
   res.json(nearbyRooms);
 });
 
-server.listen(3001, () => {
-  console.log("server is running");
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
