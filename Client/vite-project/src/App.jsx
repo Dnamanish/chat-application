@@ -3,7 +3,7 @@ import io from "socket.io-client";
 import "./App.css";
 import Chats from "./Components/Chats";
 
-const socket = io.connect("http://localhost:3001");
+const socket = io.connect(import.meta.env.VITE_BACKEND_URL);
 
 function App() {
   const [username, setUsername] = useState("");
@@ -32,7 +32,7 @@ function App() {
     if (!userLocation) return;
 
     const fetchRooms = async () => {
-      const response = await fetch("http://localhost:3001/rooms", {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/rooms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userLocation),
@@ -50,7 +50,7 @@ function App() {
     if (!username) return alert("Enter your name first");
     if (!userLocation) return alert("Location not ready");
 
-    const response = await fetch("http://localhost:3001/create-room", {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/create-room`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userLocation),
