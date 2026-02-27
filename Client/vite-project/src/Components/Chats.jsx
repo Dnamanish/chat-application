@@ -113,14 +113,12 @@ const Chats = ({ socket, username, roomId }) => {
   return (
     <div className="chat-window">
       <div className="chat-header">
-        <p>Live Chat • {onlineCount} online</p>
+        <div className="header-top">
+          <p>Live Chat • {onlineCount} online</p>
+        </div>
 
         {typingUser && (
-          <div
-            style={{ fontSize: "12px", marginLeft: "20px", color: "#6b7280" }}
-          >
-            {typingUser} is typing...
-          </div>
+          <div className="typing-indicator">{typingUser} is typing...</div>
         )}
       </div>
 

@@ -8,12 +8,12 @@ const supabase = require("./supabaseClient");
 
 const PORT = process.env.PORT || 3001;
 
-
 app.use(express.json());
 app.use(cors());
 const server = http.createServer(app);
 
 const roomUsers = {};
+const roomTimers = {};
 
 const io = new Server(server, {
   cors: {
@@ -77,6 +77,12 @@ io.on("connection", (socket) => {
 
     roomUsers[roomId]++;
 
+    if (roomTimers[roomId]) {
+      clearTimeout(roomTimers[roomId]);
+      delete roomTimers[roomId];
+      console.log("Deletion timer cancelled for room:", roomId);
+    }
+
     console.log(`User joined ${roomId}`);
     console.log("Room users:", roomUsers);
     console.log(`User with ID : ${socket.id} joined the room : ${roomId}`);
@@ -126,7 +132,43 @@ io.on("connection", (socket) => {
       roomUsers[room]--;
 
       if (roomUsers[room] <= 0) {
-        delete roomUsers[room];
+        console.log("Room empty. Starting deletion timer:", room);
+
+        roomTimers[room] = setTimeout(
+          async () => {
+            console.log("Deleting room after 1 hour inactivity:", room);
+
+            try {
+              const { error: messageError } = await supabase
+                .from("messages")
+                .delete()
+                .eq("room_id", room);
+
+              if (messageError) {
+                console.log("Failed to delete messages:", messageError);
+                return;
+              }
+
+              const { error: roomError } = await supabase
+                .from("rooms")
+                .delete()
+                .eq("id", room);
+
+              if (roomError) {
+                console.log("Failed to delete room:", roomError);
+                return;
+              }
+
+              console.log("Room and messages deleted successfully:", room);
+
+              delete roomUsers[room];
+              delete roomTimers[room];
+            } catch (err) {
+              console.log("Unexpected error during room deletion:", err);
+            }
+          },
+          60 * 60 * 1000,
+        );
       } else {
         io.to(room).emit("room_count", roomUsers[room]);
       }
@@ -136,17 +178,14 @@ io.on("connection", (socket) => {
   });
 });
 
-
 app.post("/rooms", async (req, res) => {
   const { latitude, longitude } = req.body;
 
-  if (latitude==null || longitude==null) {
+  if (latitude == null || longitude == null) {
     return res.status(400).json({ error: "Location required" });
   }
 
-  const { data, error } = await supabase
-    .from("rooms")
-    .select("*");
+  const { data, error } = await supabase.from("rooms").select("*");
 
   if (error) {
     return res.status(500).json({ error });
@@ -159,7 +198,7 @@ app.post("/rooms", async (req, res) => {
       latitude,
       longitude,
       room.latitude,
-      room.longitude
+      room.longitude,
     );
 
     return distance <= 5; // 5 KM radius
