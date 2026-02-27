@@ -114,18 +114,18 @@ const Chats = ({ socket, username, roomId }) => {
     <div className="chat-window">
       <div className="chat-header">
         <p>Live Chat • {onlineCount} online</p>
+
+        {typingUser && (
+          <div
+            style={{ fontSize: "12px", marginLeft: "20px", color: "#6b7280" }}
+          >
+            {typingUser} is typing...
+          </div>
+        )}
       </div>
 
       <div className="chat-body">
         <div className="message-container">
-          {typingUser && (
-            <div
-              style={{ fontSize: "12px", marginLeft: "20px", color: "#6b7280" }}
-            >
-              {typingUser} is typing...
-            </div>
-          )}
-
           {messageList.map((messageContent) => {
             // messageContent we'll get this from backend
             return (
