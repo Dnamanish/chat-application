@@ -8,80 +8,58 @@ Built as a full-stack project to demonstrate real-time communication, geolocatio
 ##🚀 Live Demo
 
 Frontend: https://chat-application-seven-sepia.vercel.app/
+
 Backend API: https://chat-application-pxm1.onrender.com
 
-###✨ Features
-####🌍 Location-Based Rooms
+✨ Features
 
-Users share their location using the Geolocation API
+🌍 Location-Based Rooms
 
-Only rooms within 5 km radius are shown
+Users share their location using the Geolocation API.
+Only rooms within 5 km radius are shown.
+Distance calculated using the Haversine formula.
 
-Distance calculated using the Haversine formula
+💬 Real-Time Messaging
 
-#####💬 Real-Time Messaging
+Instant messaging using Socket.IO.
+Messages delivered instantly to users in the same room.
 
-Instant messaging using Socket.IO
+👤 Anonymous Users
 
-Messages delivered instantly to users in the same room
+No authentication required.
+Each user gets an anonymous ID.
 
-######👤 Anonymous Users
-
-No authentication required
-
-Each user gets an anonymous ID
-
-######⌨️ Typing Indicator
-
+⌨️ Typing Indicator
 Shows when another user is typing
-
 Implemented using debounced socket events
 
-######👥 Live User Count
-
+👥 Live User Count
 Displays number of users currently in a room
-
-######⏳ Auto-Expiring Messages
-
+⏳ Auto-Expiring Messages
 Messages automatically expire after 2 hours
 
-########🗑 Auto-Deleting Rooms
-
+🗑 Auto-Deleting Rooms
 If a room becomes empty:
-
 A 1-hour timer starts
-
 If no one joins again → the room is automatically deleted
 
-v📜 Message Persistence
-
+📜 Message Persistence
 Previous messages are loaded when a user joins a room
-
 Stored in Supabase (PostgreSQL)
 
 🔄 Auto Scroll
-
 Chat automatically scrolls to the latest message
 
 🏗 Tech Stack
 Frontend
-
 React (Vite)
-
 Socket.IO Client
-
 Supabase Client
-
 CSS
-
 Backend
-
 Node.js
-
 Express
-
 Socket.IO
-
 Supabase (PostgreSQL)
 
 Deployment
@@ -102,6 +80,7 @@ Backend (Node + Express)
   │
   ▼
 Supabase Database
+
 Flow
 
 1️⃣ User opens app
